@@ -3,6 +3,7 @@ class Parte():
     preco: int
     def __init__(self, nome: str, preco: int) -> None:
         self.nome = nome
+        self.preco = preco
 
 class Bateria(Parte):
     energia:int
@@ -11,12 +12,22 @@ class Bateria(Parte):
         super().__init__(nome, preco)
         self.energia = energia
 
-bateria_avancada = Bateria(100000, "Bateria Modo Superior", 1000)
-bateria_media = Bateria(60000, "Bateria Modo Média", 500)
-bateria_basica = Bateria(20000, "Bateria Modo Básica", 300)
-bateria_reserva = Bateria(5000, "Bateria de Reserva", 100)
+bateria_avancada = Bateria(10000, "Bateria Modo Superior", 1000)
+bateria_media = Bateria(6000, "Bateria Modo Média", 500)
+bateria_basica = Bateria(2000, "Bateria Modo Básica", 300)
+bateria_reserva = Bateria(5009, "Bateria de Reserva", 100)
 bateria_velha = Bateria(1000, "Bateria Modo Velha", 50)
 
+
+class Energia():
+    nome: str
+    custo: int
+    poluicao: int
+    
+    def __init__(self,  nome: str, custo: int, poluicao: int) -> None:
+        self.nome = nome
+        self.custo = custo
+        self.poluicao = poluicao
 
 class Gerador(Parte):
     energia: int
@@ -24,7 +35,7 @@ class Gerador(Parte):
     def __init__(self,nome: str, energia: int, preco: int) -> None:
         super().__init__(nome, preco)
         self.energia = energia
-    
+        
 
 
 

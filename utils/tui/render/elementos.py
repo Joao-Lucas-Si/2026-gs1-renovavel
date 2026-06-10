@@ -3,14 +3,10 @@ from enum import Enum
 import math
 from os import get_terminal_size
 import re
-from sys import stderr
 from typing import Callable, Optional, overload, override
 
 from utils.arquivos import ler_arquivo
-from utils.input import obterTecla
 from utils.tui.efeitos import Efeito, aplicarEfeitos, desaplicarEfeitos
-from utils.tui.render.cursor import Cursor, PrintCursos
-
 
 class Elemento(ABC):
     largura_disponivel: int
@@ -19,13 +15,10 @@ class Elemento(ABC):
     x: int = 0
     y: int = 0
 
-
-    def escrever(self, janela: Cursor) -> None:
-        pass
-
     def __init__(self, efeitos: Optional[list[Efeito]] = None) -> None:
         tamanho = get_terminal_size()
-        self.largura_disponivel = tamanho.columns 
+        
+        self.largura_disponivel = 186 if tamanho.columns > 186 else 156 if tamanho.columns > 156 else tamanho.columns 
         self.altura_disponivel = tamanho.lines - 7
         if efeitos:
             self.efeitos = efeitos
@@ -80,19 +73,12 @@ class Container(Elemento, ABC):
 
 class EspacamentoVertical(Container):
 
-    def escrever(self, janela: Cursor):
-
-        return super().escrever(janela)
-
     @override
     def renderizar(self) -> str:
         return "\n" + super().renderizar() + "\n"
 
 class Esquerda(ContainerUnico):
-     
-    def escrever(self, janela: Cursor) -> None:
-        return super().escrever(janela)
-    
+
     @property
     def tamanho(self) -> int:
         return self.largura_disponivel
@@ -108,8 +94,6 @@ class Esquerda(ContainerUnico):
 
 class Direita(ContainerUnico):
     
-    def escrever(self, janela: Cursor) -> None:
-        return super().escrever(janela)
     
     @property
     def tamanho(self) -> int:
@@ -131,10 +115,6 @@ class Centralizado(Container):
     def tamanho(self) -> int:
         return self.largura_disponivel
 
-    def escrever(self, janela: Cursor):
-        largura_parcial = self.largura_disponivel - self.tamanho_filhos
-        janela.escrever(self.x + largura_parcial, self.y, self.renderizar_filhos())
-
     @override
     def renderizar(self) -> str:
         largura_parcial = int((self.largura_disponivel - self.tamanho_filhos) / 2)
@@ -150,15 +130,6 @@ def centralizarTopo(tamanho: int):
 
 
 class CentralizarVertical(ContainerUnico):
-
-    def escrever(self, janela: Cursor):
-        altura_filho = self.filho.altura_dinamica
-
-        altura_parcial = int((self.altura_disponivel - altura_filho) / 2)
-
-        self.filho.y = self.y + altura_parcial
-
-        self.filho.escrever(janela)
 
     def renderizar(self) -> str:
         # altura = get_terminal_size().lines
@@ -177,9 +148,7 @@ class Alinhamento(Enum):
 
 class Limites(ContainerUnico):
     largura: float
-    
-    def escrever(self, janela: Cursor) -> None:
-        return super().escrever(janela)
+
     
     @property
     def tamanho(self) -> int:
@@ -201,33 +170,6 @@ def lenEstilizado(string: str):
 
 class Coluna(Container):
     alinhamento: Alinhamento
-
-    def escrever(self, janela: Cursor) -> None:
-        self.definir_largura(self.largura_disponivel)
-        linhas: list[str] = []
-        largura_disponivel = int(self.largura_disponivel * 0.9)
-        x = int(self.largura_disponivel * 0.05)
-        y = 0
-       
-        for filho in self.filhos:
-            if isinstance(filho, Texto):
-                for quebra in filho.conteudo.split("\n"):
-                    if quebra:
-                        for linha in self.quebrarLinhas(quebra):
-                            janela.escrever(self.y + y, self.x + x,linha)
-                            y += 1
-            elif isinstance(filho, Ascii) or isinstance(filho, AsciiAnimado):
-                filho.x = self.x + x
-                filho.y = self.y + y
-                filho.escrever(janela)
-                y += filho.altura_dinamica
-            else:
-                filho.x = self.x + x
-                filho.y = self.y + y
-                filho.escrever(janela)
-                y += filho.altura_dinamica
-        return super().escrever(janela)
-
     @property
     def tamanho(self) -> int:
         return self.largura_disponivel
@@ -244,8 +186,9 @@ class Coluna(Container):
 
     def quebrarLinhas(self, texto: str) -> list[str]:
         linhas: list[str] = [""]
-        palavras = texto.split(" ")
-        largura_disponivel = int(self.largura_disponivel * 0.9)
+        palavras = texto.strip().split(" ")
+        #largura_disponivel = int(self.largura_disponivel * 0.9)
+        largura_disponivel = self.largura_disponivel 
         atual = 0
         for palavra in palavras:
             if lenEstilizado(palavra) + lenEstilizado(linhas[atual]) > largura_disponivel:
@@ -260,7 +203,8 @@ class Coluna(Container):
     def renderizar(self) -> str:
         self.definir_largura(self.largura_disponivel)
         linhas: list[str] = []
-        largura_disponivel = int(self.largura_disponivel * 0.9)
+         #largura_disponivel = int(self.largura_disponivel * 0.9)
+        largura_disponivel = self.largura_disponivel
         for filho in self.filhos:
             if isinstance(filho, Texto):
                 for quebra in filho.conteudo.split("\n"):
@@ -291,6 +235,7 @@ class Coluna(Container):
                     linhas[atual] = (
                         espacos + linhas[atual] + espacos + (" " * em_branco)
                     )
+                   
                 elif self.alinhamento == Alinhamento.DIREITA:
                     espaco_parcial = " " * espacos_restantes
 
@@ -300,7 +245,7 @@ class Coluna(Container):
 
                     linhas[atual] = linhas[atual] + espaco_parcial
             if lenEstilizado(linhas[atual]) < largura_disponivel:
-                linhas[atual] += " "
+                linhas[atual] += " " * (largura_disponivel - lenEstilizado(linhas[atual]))
         return "\n".join([self.estilizar(linha) for linha in linhas])
 
 
@@ -314,10 +259,7 @@ class Texto(Elemento):
     @property
     def altura_dinamica(self) -> int:
         return 1
-
-    def escrever(self, janela: Cursor) -> None:
-        janela.escrever(self.y, self.x, self.conteudo)
-
+    
     @property
     @override
     def tamanho(self) -> int:
@@ -335,14 +277,6 @@ class Linha(Container):
         
         return self.tamanho_filhos + len(self.filhos) - 1
 
-    def escrever(self, janela: Cursor) -> None:
-        x = 0
-        for filho in self.filhos:
-            filho.x = self.x + x
-            filho.y = self.y
-            filho.escrever(janela)
-            x += filho.tamanho
-            
     def renderizar_filhos(self):
         return super().renderizar_filhos()
 
@@ -368,13 +302,6 @@ class AsciiAnimado(Elemento):
     def tamanho(self) -> int:
         return max(map(lambda x: lenEstilizado(x), self.conteudo.split("\n")))
 
-    def escrever(self, janela: Cursor) -> None:
-        linhas = self.conteudo.split("\n")[
-            self.atual * self.altura : (self.atual + 1) * self.altura
-        ]
-
-        for i, linha in enumerate(linhas):
-            janela.escrever(self.y + i, self.x, linha)
 
     def renderizar(self) -> str:
         linhas = self.conteudo.split("\n")[
@@ -404,12 +331,6 @@ class Ascii(Elemento):
     def altura_dinamica(self) -> int:
         return len(self.conteudo.split("\n"))
 
-    def escrever(self, janela: Cursor) -> None:
-        linhas = self.conteudo.split("\n")
-
-        for i, linha in enumerate(linhas):
-            janela.escrever(self.y + i, self.x, linha)
-
     @property
     def tamanho(self) -> int:
         return max(map(lambda x: lenEstilizado(x), self.conteudo.split("\n")))
@@ -435,69 +356,11 @@ class Tabela(Container):
     largura_parcial: list[int]
 
     def definir_largura_filhos(self, largura_disponivel: list[int]):
-        coluna = 0
-        for filho in self.filhos:
-            filho.largura_disponivel = largura_disponivel[coluna]
-            if coluna == (self.colunas - 1):
-                coluna = 0
-            else:
-                coluna += 1
-
-    def escrever(self, janela: Cursor) -> None:
-        self.largura_parcial = list(
-            map(lambda x: int(self.largura_disponivel * x), self.divisoes)
-            if self.divisoes
-            else map(
-                lambda x: (
-                    self.largura_disponivel
-                    if self.colunas == 1
-                    else math.floor(
-                        (self.largura_disponivel - self.colunas + 1) / self.colunas
-                    )
-                ),
-                range(self.colunas),
-            )
-        )
-        self.definir_largura_filhos(self.largura_parcial)
-        #resultado: list[list[str]] = []
-
-        coluna = 0
-        max = 0
-        maxAtual = 1
-        for filho in self.filhos:
-            c = filho.altura_dinamica
-            
-            # r = max + c
-            filho.y = self.y + max + 1
-            filho.x = self.x + (sum(self.largura_parcial[:coluna])) + (coluna + 1)
-            filho.escrever(janela)
-            
-            if c > maxAtual:
-                maxAtual = c
-            
-            # linhas = filho.renderizar().split("\n")
-            # for c, linha in enumerate(linhas):
-            #     r = max + c
-
-            #     # while r >= len(resultado):
-            #     #     resultado.append(list(map(lambda x: "", range(self.colunas))))
-            #     if c > maxAtual:
-            #         maxAtual = c
-            #     filho.y = self.y + r
-            #     filho.x = self.x + (coluna * self.largura_parcial[coluna]) + (coluna + 1)
-            #     filho.escrever(janela)
-            #     #resultado[r][coluna] = filho.estilizar(linha)
-            if coluna == (self.colunas - 1):
-                coluna = 0
-                max += maxAtual + 1
-                maxAtual = 1
-            else:
-                coluna += 1
-
-        # for i, linha in enumerate(resultado):
-        #     for j, coluna in enumerate(linha):
-        #         if len(coluna) == 0:
-        #             resultado[i][j] = " " * self.largura_parcial[j % self.colunas]
+      
+        for coluna in range(len(self.filhos)):
+            filho = self.filhos[coluna]
+            filho.largura_disponivel = largura_disponivel[coluna % self.colunas]
+           
 
     @property
     def tamanho(self) -> int:
@@ -518,6 +381,7 @@ class Tabela(Container):
                 range(self.colunas),
             )
         )
+     
         self.definir_largura_filhos(self.largura_parcial)
         resultado: list[list[str]] = []
 
@@ -534,6 +398,9 @@ class Tabela(Container):
                 if c > maxAtual:
                     maxAtual = c
                 resultado[r][coluna] = filho.estilizar(linha)
+                
+                # if (lenEstilizado(resultado[r][coluna]) < self.largura_parcial[coluna]):
+                #     resultado[r][coluna] += " "
             if coluna == (self.colunas - 1):
                 coluna = 0
                 max += maxAtual + 1
@@ -543,8 +410,11 @@ class Tabela(Container):
 
         for i, linha in enumerate(resultado):
             for j, coluna in enumerate(linha):
+                largura = self.largura_parcial[j % self.colunas]
                 if len(coluna) == 0 or not coluna:
                     resultado[i][j] = " " * (self.largura_parcial[j % self.colunas])
+               
+                #     resultado[i][j] = coluna[:largura]    
         return (
             "\n".join(map(("|" if self.mostrar_divisoes else " ").join, resultado))
             + "\n"
@@ -588,9 +458,6 @@ class Preencher(Elemento):
         return self.conteudo * self.largura_disponivel
 
 
-# class Area(Container):
-
-
 class Borda(ContainerUnico):
 
     borda_vertical: str
@@ -599,26 +466,6 @@ class Borda(ContainerUnico):
     @property
     def altura_dinamica(self) -> int:
         return self.altura_disponivel
-
-    def escrever(self, janela: Cursor) -> None:
-        # print("escrevendo")
-        largura_disponivel = self.largura_disponivel - (len(self.borda_vertical) * 2)
-        janela.escrever(self.y, self.x, self.borda_horizontal * self.largura_disponivel)
-        for y in range(1, self.altura_disponivel + 1):
-            pass
-            # print(self.y + y, self.x, self.borda_vertical)
-            janela.escrever(self.y + y, self.x, self.borda_vertical)
-            janela.escrever(
-                self.y + y, self.x + self.largura_disponivel , self.borda_vertical
-            )
-        janela.escrever(
-            self.y + self.altura_disponivel,
-            self.x + 1,
-            self.borda_horizontal * largura_disponivel,
-        )
-        self.filho.x = self.x + 1
-        self.filho.y = self.y + 1
-        self.filho.escrever(janela)
 
     def __init__(
         self,
@@ -667,78 +514,3 @@ class Borda(ContainerUnico):
             + self.borda_vertical
         )
         return "\n".join(linhas)
-
-
-class Scroll(ContainerUnico):
-    atual: int
-
-    def escrever(self, janela: Cursor) -> None:
-        return super().escrever(janela)
-
-    def __init__(
-        self, atual: int, filhos: Elemento, largura: int | None = None
-    ) -> None:
-        super().__init__(filhos, largura)
-        self.atual = atual
-
-    def renderizar(self) -> str:
-        self.filho.largura_disponivel = self.largura_disponivel
-        # return ""
-        linhas = self.filho.renderizar().split("\n")
-        
-        area = linhas[self.atual:self.atual+self.altura_disponivel]
-        #return ""
-        return '\n'.join(area)
-
-
-
-class Input(Elemento):
-    valor: str
-    mudarValor: Callable[[str], None]
-    
-    def __init__(self, valor: str, mudarValor: Callable[[str], None], efeitos: list[Efeito] | None = None) -> None:
-        super().__init__(efeitos)
-        self.valor = valor
-        self.mudarValor = mudarValor
-    
-    @property
-    def tamanho(self) -> int:
-        return len(self.valor)
-
-    def escrever(self, janela: Cursor) -> None:
-        self.obterEscrita()
-        janela.escrever(self.y, self.x, self.valor )
-
-    def obterEscrita(self):
-        char = obterTecla()
-        if char == "\x7f":
-            # print("p", self.valor, self.valor[:-2])
-            self.mudarValor(self.valor[:-1])
-            
-        elif char != "" and type(char) == str:
-            self.mudarValor(self.valor + char)
-
-    def renderizar(self) -> str:
-        self.obterEscrita()
-        return "v:" + self.valor
-
-
-# janela: window
-
-
-def escrever(elemento: Elemento):
-    pass
-    # print(CursesCursor().instancia.janela)
-    # elemento.escrever(CursesCursor().instancia)
-    # janela.refresh()
-
-# def iniciar_escrita():
-    
-#     def obterJanela(stdscr: window):
-#         global janela
-#         # stdscr.addstr(3,0, "OBTENDO")
-#         # stdscr.addstr(4,0, f"{get_terminal_size().lines}")
-#         # stdscr.refresh()
-#         janela = stdscr
-
-#     curses.wrapper(obterJanela)

@@ -12,32 +12,25 @@ class Caracteristica(Enum):
     MODULO=3,
     OXIGENIO=4,
     
-class Nivel():
-    valor: int
-    gasto: int
-    nivel: int
-    
-    def __init__(self, valor: int, gasto: int) -> None:
-        self.valor = valor
-        self.gasto = gasto
-        # self.nivel = nivel
-    
 
 class Custo:
     energia: int
     caracteristica: Caracteristica   
-    valor: int
-    niveis: list[Nivel]
+    valor: float
     
     @property
     def energia_gasta(self):
         return self.calcular_gasto(self.valor)
     
-    def calcular_gasto(self, valor: int):
+    @property
+    def incremento(self):
+        return int(self.maximo * self.valor)
+    
+    def calcular_gasto(self, valor: float):
         return int(self.energia * (valor/self.maximo))
-    def __init__(self, energia: int, caracteristica: Caracteristica, valor: int, maximo: int = 0, niveis: list[Nivel] = []) -> None:
+    
+    def __init__(self, energia: int, caracteristica: Caracteristica, valor: float, maximo: int = 0) -> None:
         self.energia = energia
         self.caracteristica = caracteristica
         self.valor = valor
         self.maximo = maximo
-        self.niveis = niveis

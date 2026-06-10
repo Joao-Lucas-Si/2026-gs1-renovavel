@@ -1,13 +1,16 @@
-from utils.input import estaPressionado
 from utils.tui.render.elementos import Ascii, AsciiAnimado
 from src.database import Database
-from utils.sistema import esperar, limpar
+from utils.sistema import InputTarefa, esperar, limpar
 from utils.tui.render.elementos import Coluna, Tabela, Texto
 
 
 def derrota():
     i = 0
+    tarefa = InputTarefa()
     while True:
+        tarefa.iniciar()
+        if tarefa.pressionado:
+            break
         print(Tabela(
             2,
             [
@@ -27,6 +30,7 @@ def derrota():
         ).renderizar()
         )
         esperar(0.1)
+        tarefa.terminar()
         i += 1
         limpar()
 
@@ -67,8 +71,10 @@ def derrota():
 
 def vitoria():
     i = 0
+    tarefa = InputTarefa()
     while True:
-        if estaPressionado("\n") or estaPressionado("\r"):
+        tarefa.iniciar()
+        if tarefa.pressionado:
             break
         print(
             Tabela(
@@ -82,7 +88,7 @@ def vitoria():
                     Coluna(
                         [
                             Texto("Parabéns, Você sobreviveu!\n"),
-                            Texto("Dados coletados durante a missão:\n"),
+                            Texto("Dados finais da missão:\n"),
                             Texto(f"Energia: {Database.instancia().energia}"),
                             Texto(f"\nTemperatura: {Database.instancia().temperatura}"),
                             Texto(f"\nOxigenio: {Database.instancia().oxigenio}"),
@@ -94,6 +100,7 @@ def vitoria():
             ).renderizar()
         )
         esperar(0.25)
+        tarefa.terminar()
         i += 1
         limpar()
 
