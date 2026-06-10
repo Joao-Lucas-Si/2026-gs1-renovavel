@@ -1,7 +1,7 @@
 import random
 from typing import Optional
 
-from database import Database
+from src.database import Database
 from src.missao import missao
 from src.nave import Nave, printarNave
 from src.partes import (

@@ -17,10 +17,10 @@ class Nivel():
     gasto: int
     nivel: int
     
-    def __init__(self, valor: int, gasto: int, nivel: int) -> None:
+    def __init__(self, valor: int, gasto: int) -> None:
         self.valor = valor
         self.gasto = gasto
-        self.nivel = nivel
+        # self.nivel = nivel
     
 
 class Custo:
@@ -35,7 +35,7 @@ class Custo:
     
     def calcular_gasto(self, valor: int):
         return int(self.energia * (valor/self.maximo))
-    def __init__(self, energia: int, caracteristica: Caracteristica, valor: int, maximo: int, niveis: list[Nivel]) -> None:
+    def __init__(self, energia: int, caracteristica: Caracteristica, valor: int, maximo: int = 0, niveis: list[Nivel] = []) -> None:
         self.energia = energia
         self.caracteristica = caracteristica
         self.valor = valor
