@@ -1,10 +1,7 @@
-from ast import mod
-from calendar import c
-from enum import Enum
 import random
 from time import sleep
-from typing import Tuple
 
+from src.partes import GeradorNaoRenovavel
 from src.database import Database, Tendencia, Tendencias
 from src.nave import printarNave
 from src.custos import Caracteristica, Custo
@@ -30,7 +27,7 @@ custos = [
 def parametro_mortifero():
     db = Database.instancia()
     return (
-        db.temperatura <= 0 or db.oxigenio <= 0 or db.modulo <= 0 or db.comunicacao <= 0
+        db.temperatura <= -40 or db.oxigenio <= 0 or db.modulo <= 0 or db.comunicacao <= 0
     )
 
 
@@ -52,6 +49,7 @@ def mudar_tendencias():
 
 def missao(nave: Nave):
     db = Database.instancia()
+    db.tempo -= nave.propulsor.velocidade
     while db.atual <= db.tempo and db.energia > 0 and not parametro_mortifero():
         limpar()
 
@@ -150,13 +148,16 @@ def missao(nave: Nave):
             colunas=2,
             top=lambda: menuMisao(nave),
         )
+        if nave.gerador:
+            db.energia = nave.gerador.energia
+            if isinstance(nave.gerador, GeradorNaoRenovavel):
+                db.poluicao += nave.gerador.impacto
+        aplicarCustos()
         aplicarTendencia()
         for tendencia in db.tendencias:
             tendencia.tendencia.atividade += 1
-        aplicarCustos()
         mudar_tendencias()
-        if nave.gerador:
-            db.energia = nave.gerador.energia
+
         db.atual += 1
 
     if db.energia < 0 or parametro_mortifero():
@@ -174,13 +175,13 @@ def aplicarTendencia():
         match (tendencia.caracteristica):
             case Caracteristica.TEMPERATURA:
                 db.temperatura -= valor
-                if db.temperatura < 0:
-                    db.temperatura = 0
+                if db.temperatura < -40:
+                    db.temperatura = -40
             case Caracteristica.COMUNICACAO:
                 db.comunicacao -= valor
 
                 if db.comunicacao < 0:
-                    print("zero")
+                   
                     db.comunicacao = 0
             case Caracteristica.OXIGENIO:
                 db.oxigenio -= valor
@@ -188,7 +189,7 @@ def aplicarTendencia():
                     db.oxigenio = 0
             case Caracteristica.MODULO:
                 db.modulo -= valor
-                if db.temperatura < 0:
+                if db.modulo < 0:
                     db.modulo = 0
 
 
@@ -197,26 +198,20 @@ def aplicarCustos():
     for custo in custos:
         match (custo.caracteristica):
             case Caracteristica.TEMPERATURA:
-
-                if db.temperatura < 100:
-                    db.temperatura += custo.incremento
-                if db.temperatura > 100:
-                    db.temperatura = 100
+                db.temperatura += custo.incremento
+                if db.temperatura > 40:
+                    db.temperatura = 40
             case Caracteristica.COMUNICACAO:
-
-                if db.comunicacao < 100:
-                    db.comunicacao += custo.incremento
+                db.comunicacao += custo.incremento
                 if db.comunicacao > 100:
                     db.comunicacao = 100
             case Caracteristica.OXIGENIO:
-                if db.oxigenio < 100:
-                    db.oxigenio += custo.incremento
+                db.oxigenio += custo.incremento
                 if db.oxigenio > 100:
                     db.oxigenio = 100
             case Caracteristica.MODULO:
-                if db.modulo < 100:
-                    db.modulo += custo.incremento
-                if db.temperatura > 100:
+                db.modulo += custo.incremento
+                if db.modulo > 100:
                     db.modulo = 100
         db.energia -= custo.energia
 
@@ -232,25 +227,27 @@ def menuMisao(nave: Nave):
                 [
                     Coluna([Texto("Energia")]),
                     Coluna([Texto(f"{db.energia}")]),
+                    Coluna([Texto("Poluição")]),
+                    Coluna([Texto(f"{db.poluicao}")]),
                 ],
             ),
             Tabela(
                 4,
                 [
-                    Coluna([Texto("Oxigênio")]),
-                    Coluna([Texto(f"{db.oxigenio}")]),
-                    Coluna([Texto(f"{custos[0].valor *100}%")]),
-                    Coluna([Texto(f"{db.tendencias[0].tendencia.nome}")]),
                     Coluna([Texto("Temperatura")]),
                     Coluna([Texto(f"{db.temperatura}")]),
+                    Coluna([Texto(f"{custos[0].valor *100}%")]),
+                    Coluna([Texto(f"{db.tendencias[0].tendencia.nome}")]),
+                    Coluna([Texto("Comunicação")]),
+                    Coluna([Texto(f"{db.comunicacao}")]),
                     Coluna([Texto(f"{custos[1].valor *100}%")]),
                     Coluna([Texto(f"{db.tendencias[1].tendencia.nome}")]),
                     Coluna([Texto("Modulo")]),
                     Coluna([Texto(f"{db.modulo}")]),
                     Coluna([Texto(f"{custos[2].valor *100}%")]),
                     Coluna([Texto(f"{db.tendencias[2].tendencia.nome}")]),
-                    Coluna([Texto("Comunicação")]),
-                    Coluna([Texto(f"{db.comunicacao}")]),
+                    Coluna([Texto("Oxigênio")]),
+                    Coluna([Texto(f"{db.oxigenio}")]),
                     Coluna([Texto(f"{custos[3].valor *100}%")]),
                     Coluna([Texto(f"{db.tendencias[3].tendencia.nome}")]),
                 ],

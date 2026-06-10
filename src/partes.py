@@ -12,19 +12,19 @@ class Bateria(Parte):
         super().__init__(nome, preco)
         self.energia = energia
 
-bateria_avancada = Bateria(10000, "Bateria Modo Superior", 1000)
-bateria_media = Bateria(6000, "Bateria Modo Média", 500)
+bateria_avancada = Bateria(5000, "Bateria Modo Superior", 1000)
+bateria_media = Bateria(3500, "Bateria Modo Média", 500)
 bateria_basica = Bateria(2000, "Bateria Modo Básica", 300)
-bateria_reserva = Bateria(5009, "Bateria de Reserva", 100)
+# bateria_reserva = Bateria(2000, "Bateria de Reserva", 100)
 bateria_velha = Bateria(1000, "Bateria Modo Velha", 50)
 
 
 class Energia():
     nome: str
-    custo: int
+    custo: float
     poluicao: int
     
-    def __init__(self,  nome: str, custo: int, poluicao: int) -> None:
+    def __init__(self,  nome: str, custo: float, poluicao: int) -> None:
         self.nome = nome
         self.custo = custo
         self.poluicao = poluicao
@@ -47,11 +47,11 @@ class GeradorNaoRenovavel(Gerador):
         self.impacto = impacto
     pass
 
-gerador_solar = Gerador("Solzão", 10000, 1000)
-gerador_biogas = Gerador("Carro do gás", 30000, 1000)
-gerador_fusao_nuclear = GeradorNaoRenovavel("uranio da massa", 60000, 1000)
-gerador_fissao_nuclear = GeradorNaoRenovavel("Gerador por fissão nuclear", 55000, 1000)
-gerador_biocombustivel = GeradorNaoRenovavel("Gerador de combustivel", 40000, 1000)
+gerador_solar = Gerador("gerador solar", 50, 1000)
+gerador_biogas = Gerador("gerador po gás", 25, 1000)
+gerador_fusao_nuclear = GeradorNaoRenovavel("mini nuclear", 100, 1000)
+# gerador_fissao_nuclear = GeradorNaoRenovavel("Gerador por fissão nuclear", 55000, 1000)
+gerador_combustivel = GeradorNaoRenovavel("Gerador de combustivel", 50, 1000)
 
 
 class Propulsor(Parte):
@@ -62,6 +62,6 @@ class Propulsor(Parte):
         self.velocidade = velocidade
         self.energia = energia
         
-propulsor_luz = Propulsor("propulsor de luz", 1000, 100, 150)
-propulsor_hiper = Propulsor("propulsor hiper", 500, 50, 250)
-propulsor_basico = Propulsor("propolsor básico", 100, 10, 50)
+propulsor_luz = Propulsor("propulsor de luz", 2, 100, 150)
+propulsor_hiper = Propulsor("propulsor hiper", 3, 50, 250)
+propulsor_basico = Propulsor("propolsor básico", 0, 10, 50)

@@ -1,26 +1,30 @@
 from typing import Optional
 
-from src.partes import Bateria, Gerador, Propulsor, bateria_avancada, bateria_basica, bateria_media, bateria_reserva, bateria_velha, propulsor_basico, propulsor_hiper, propulsor_luz
+from src.partes import Bateria, Gerador, Parte, Propulsor, bateria_avancada, bateria_basica, bateria_media,  bateria_velha, propulsor_basico, propulsor_hiper, propulsor_luz
 from utils.arquivos import ler_arquivo
 
 
 class Nave:
-    propulsor: Propulsor = propulsor_hiper
+    propulsor: Propulsor = propulsor_basico
     gerador: Optional[Gerador]
     bateria: Bateria = bateria_basica
     
     @property
-    def partes(self):
-        return [
+    def partes(self) -> list[Parte]:
+        partes = [
             self.propulsor,
-            self.gerador,
+           
             self.bateria
         ]
+        if  self.gerador:
+            partes.append(self.gerador)
+            
+        return partes
 
     def __init__(
         self,
-        propulsor: Propulsor = propulsor_hiper,
-        bateria: Bateria = bateria_avancada,
+        propulsor: Propulsor = propulsor_basico,
+        bateria: Bateria = bateria_basica,
         gerador: Optional[Gerador] = None,
     ) -> None:
         self.propulsor = propulsor
@@ -44,9 +48,9 @@ def printarNave(nave: Nave):
     match (nave.bateria.nome):
         case bateria_avancada.nome:
             bateria = ler_arquivo("recursos/ascii/naves/bateria/avancado.txt")
-        case bateria_reserva.nome | bateria_media.nome:
-            bateria = ler_arquivo("recursos/ascii/naves/bateria/simples.txt")
-        case bateria_basica.nome | bateria_velha.nome:
+        case bateria_media.nome:
             bateria = ler_arquivo("recursos/ascii/naves/bateria/medio.txt")
+        case bateria_basica.nome | bateria_velha.nome:
+            bateria = ler_arquivo("recursos/ascii/naves/bateria/simples.txt")
 
     return fogute_base + "\n" + bateria + "\n" + propulsor
