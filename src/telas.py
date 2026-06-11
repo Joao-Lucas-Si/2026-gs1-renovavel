@@ -1,16 +1,13 @@
 from utils.tui.render.elementos import Ascii, AsciiAnimado
 from src.database import Database
-from utils.sistema import InputTarefa, esperar, limpar
+from utils.sistema import  esperar, limpar
 from utils.tui.render.elementos import Coluna, Tabela, Texto
-
+import os
 
 def derrota():
     i = 0
-    tarefa = InputTarefa()
-    while True:
-        tarefa.iniciar()
-        if tarefa.pressionado:
-            break
+    
+    def elemento(i: int):
         print(Tabela(
             2,
             [
@@ -27,55 +24,37 @@ def derrota():
                 ),
                 Coluna([AsciiAnimado("recursos/ascii/esqueleto.txt", i, 31)]),
             ],
-        ).renderizar()
-        )
-        esperar(0.1)
-        tarefa.terminar()
-        i += 1
+        ).renderizar())
+    def padrao():
         limpar()
+        print(f"ocorreu um erro com a renderização de animação, o projeto foi desenvolvido em linux, então certas funcionalidades mais complexas podem não funcionar em mac ou windows")
+        elemento(i)
+    try:
+        if os.name == "nt":
+            padrao()
+        else:
+            from utils.tarefa import InputTarefa
+            pressionado = InputTarefa()
+            while True:
+                
+                pressionado.iniciar()
+                elemento(i)
+                if pressionado.pressionado:
+                    break
+                esperar(0.25)
+                pressionado.terminar()
+                i += 1
+                limpar()
+    except:
+        padrao()
+        
 
 
-# def derrota():
-#     i = 0
-#     estados: list[Dado] = [
-#         {"estado": estado_temperatura(dados_atuais[0]), "dado": "temperatura"},
-#         {"estado": estado_comunicacao(dados_atuais[1]), "dado": "comunicação"},
-#         {"estado": estado_bateria(dados_atuais[2]),"dado": "bateria"},
-#         {"estado": estado_oxigenio(dados_atuais[3]),"dado": "oxigenio"},
-#         {"estado": estado_estabilidade(dados_atuais[4]),"dado": "estabilidade"},
-#         {"estado": estado_integridade(dados_atuais[5]),"dado": "integridade"},
-#         {"estado": estado_motor(dados_atuais[6]),"dado": "motor"},
-#     ]
-#     dados = Coluna([Texto("Infelizmente, você morreu"), Texto(""), Texto("estados criticos")])
-#     motivos = [Texto(f"{estado["dado"]}: {estado['estado'].name}") for estado in estados if estado["estado"] != Estado.ESTAVEL and estado["estado"] != Estado.MORTIFERO]
-#     dados.filhos.extend(motivos)
-#     dados.filhos.append(Texto(""))
-#     dados.filhos.append(Texto(f"causa da morte: {','.join(estado["dado"] for estado in estados if estado["estado"] == Estado.MORTIFERO)}"))
-#     while True:
-#         if estaPressionado("\n"):
-#             break
-
-#         print(
-#             Tabela(
-#                 2,
-#                 [
-#                     dados,
-#                     Coluna([AsciiAnimado("recursos/ascii/esqueleto.txt", i, 31)]),
-#                 ],
-#             ).renderizar()
-#         )
-#         esperar(0.1)
-#         i += 1
-#         limpar()
 
 
 def vitoria():
     i = 0
-    tarefa = InputTarefa()
-    while True:
-        tarefa.iniciar()
-        if tarefa.pressionado:
-            break
+    def elemento(i: int):
         print(
             Tabela(
                 2,
@@ -99,45 +78,26 @@ def vitoria():
                 ],
             ).renderizar()
         )
-        esperar(0.25)
-        tarefa.terminar()
-        i += 1
+    def padrao():
         limpar()
-
-
-# def vitoria():
-#     i = 0
-#     while True:
-#         if estaPressionado("\n"):
-#             break
-#         print(
-#             Tabela(
-#                 3,
-#                 [
-#                     Coluna(
-#                         [
-#                             Texto("parabens, voce não morreu"),
-#                             AsciiAnimado("recursos/ascii/parabens.txt", i, 14),
-
-#                             # , efeitos=[Cores1B.AZUL.value.efeito(CorAlvo.TEXTO)]
-#                         ]
-#                     ),
-#                     Coluna(
-#                         [
-#                             Ascii("recursos/ascii/dinheiro.txt"),
-#                             Coluna(
-#                                 [
-#                                     Texto(f"{material.name}:{material.value.valor}")
-#                                     for material in banco_dados.asteroide.materiais
-#                                 ]
-#                             ),
-#                         ]
-#                     ),
-#                     Coluna([Ascii("recursos/ascii/astronauta-inteiro.txt" , efeitos=[Cores1B.ROXO.value.efeito(CorAlvo.TEXTO)])]),
-#                     # , efeitos=[Cores1B.ROXO.value.efeito(CorAlvo.TEXTO)]
-#                 ],
-#             ).renderizar()
-#         )
-#         esperar(0.25)
-#         i += 1
-#         limpar()
+        print(f"ocorreu um erro com a renderização de animação, o projeto foi desenvolvido em linux, então certas funcionalidades mais complexas podem não funcionar em mac ou windows")
+        elemento(i)
+    try:
+        if os.name == "nt":
+            padrao()
+        else:
+            from utils.tarefa import InputTarefa
+            pressionado = InputTarefa()
+            while True:
+                
+                pressionado.iniciar()
+                elemento(i)
+                if pressionado.pressionado:
+                    break
+                esperar(0.25)
+                pressionado.terminar()
+                i += 1
+                limpar()
+    except:
+        padrao()
+        
